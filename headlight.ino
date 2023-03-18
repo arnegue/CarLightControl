@@ -1,13 +1,10 @@
 #include <ESPAsyncWebSrv.h>
 #include "wifi.h"
 
-#define AMOUNT_CHARS_NEW 128
-
-char esp_buffer[AMOUNT_CHARS_NEW];
 AsyncWebServer server(80);
 
 const char index_html[] PROGMEM =
-#include "index.h" // unfortunatelly this only works when manipulating the html to a raw-string, and changing the file extensiomn
+#include "index.h"  // unfortunatelly this only works when manipulating the html to a raw-string, and changing the file extensiomn
   ;
 
 const char* PARAM_INPUT_1 = "name";
@@ -15,40 +12,101 @@ const char* PARAM_INPUT_2 = "state";
 const char* PARAM_INPUT_3 = "value";
 
 class PWMSwitch {
-  public :
-    PWMSwitch(String pwm_name, int pwm_pin, int potentiometer_pin) {
-      this->name = pwm_name;
-      this->pwm_pin = pwm_pin;
-      this->potentiometer_pin = potentiometer_pin;
+public:
+  PWMSwitch(String pwm_name, int pwm_pin, int potentiometer_pin) {
+    Serial.print("Creating new Switch: ");
+    Serial.print(pwm_name);
+    this->name = pwm_name;
+    this->pwm_pin = pwm_pin;
+    this->potentiometer_pin = potentiometer_pin;
+    this->output_s = false;
+    this->duty_cycle = 0;
+  }
+
+  void setup() {
+    this->pwm_channel = this->next_free_pwm_channel;
+    ledcSetup(this->pwm_channel, this->PWM_FREQ, this->RESOLUTION_BITS);
+    ledcAttachPin(this->pwm_pin, pwm_channel);
+    this->next_free_pwm_channel++;
+  }
+
+  String getName() {
+    return this->name;
+  }
+
+  void setOutput(bool on) {
+    if (on) {
+      Serial.print(" Setting pwm on ");
+      ledcWrite(this->pwm_channel, this->duty_cycle);
+    } else {
+      Serial.print("Setting pwm off ");
+      ledcWrite(this->pwm_channel, 0);
     }
-    String getName() {
-      return this->name;
+    this->output_s = on;
+  }
+
+  bool getOutput() {
+    return this->output_s;
+  }
+
+  void setValue(int percentage) {
+    this->duty_cycle = ((float)this->MAX_VALUE * (float)percentage) / 100;
+    if (this->getOutput()) {
+      Serial.print(" Setting pwm percentage ");
+      ledcWrite(this->pwm_channel, this->duty_cycle);
+    } else {
+      Serial.print(" Preparing to set pwm percentage ");
     }
-    void setValue(int percentage){
-      // TODO calculation
-    }
-  protected:
-    String name;
-    int pwm_pin;
-    int potentiometer_pin;
+  }
+
+  PWMSwitch* address(void) {
+    return this;
+  }
+
+  int getValue() {
+    return (this->duty_cycle * 100) / this->MAX_VALUE;
+  }
+
+  static int next_free_pwm_channel;  // TODO protected
+protected:
+  String name;
+  bool output_s;
+  int duty_cycle;
+  int pwm_pin;
+  int pwm_channel;
+  int potentiometer_pin;
+  const int PWM_FREQ = 5000;
+  const int RESOLUTION_BITS = 8;
+  const int MAX_VALUE = (1 << RESOLUTION_BITS) - 1;
+};
+int PWMSwitch::next_free_pwm_channel = 0;
+
+static std::vector<PWMSwitch*> switches = {
+  //         Name             PIn, PotiPin
+  new PWMSwitch("Ruecklicht", 19, 0),
+  new PWMSwitch("BremsLicht", 0, 0),
+  new PWMSwitch("Blinker", 0, 0),
+  new PWMSwitch("Rueckfahrlicht", 0, 0),
 };
 
-std::vector<PWMSwitch> switches = {
-  PWMSwitch("Ruecklicht", 0, 0),
-  PWMSwitch("BremsLicht", 0, 0),
-  PWMSwitch("Blinker", 0, 0),
-  PWMSwitch("Rueckfahrlicht", 0, 0),
-};
-
-String processor(const String& var)
-{
-  if (var == "BUTTON_REPLACE"){
+String processor(const String& var) {
+  if (var == "BUTTON_REPLACE") {
     String ret_str = String();
     for (auto pwm_switch : switches) {
       ret_str += "<tr>";
-      ret_str += "<td>" + pwm_switch.getName() + "</td>";
-      ret_str += "<td><input type=\"checkbox\" id=\"" + pwm_switch.getName() + "\"></td>";
-      ret_str += "<td><input type=\"range\" min=\"1\" max=\"100\" value=\"50\" class=\"slider\" id=\"" + pwm_switch.getName() +"\"></td>";
+      ret_str += "<td>" + pwm_switch->getName() + "</td>";
+
+      // Checkbox
+      ret_str += "<td><input type=\"checkbox\" id=\"" + pwm_switch->getName() + "\"";
+      if (pwm_switch->getOutput()) {
+        ret_str += " checked ";
+      }
+      ret_str += "></td>";
+
+      // Slider
+      ret_str += "<td><input type=\"range\" min=\"1\" max=\"100\" value=\"";
+      ret_str += String(pwm_switch->getValue());
+      ret_str += "\" class=\"slider\" id=\"" + pwm_switch->getName() + "\"></td>";
       ret_str += "</tr>";
     }
     return ret_str;
@@ -56,11 +114,21 @@ String processor(const String& var)
   return String();
 }
 
+PWMSwitch* getSwitchByName(String name) {
+  for (auto pwm_switch : switches) {
+    if (pwm_switch->getName() == name) {      
+      Serial.print("Found switch: ");
+      Serial.println(pwm_switch->getName());
+      return pwm_switch;
+    }
+  }
+  Serial.print("Didn't find Switch: ");
+  Serial.println(name);
+  throw std::invalid_argument("Didn't find Value");
+}
+
 void setup() {
   Serial.begin(115200);
-
-  Serial.print("Testcontent:");
-  Serial.println(index_html);
 
   WiFi.begin(ssid, password);
   WiFi.setHostname("headlight1");
@@ -69,40 +137,54 @@ void setup() {
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
-  //server.serveStatic("/index.html", SPIFFS, "/index.html");
+
+  for (auto pwm_switch : switches) {
+    Serial.print("Setting up switch: ");
+    pwm_switch->setup();
+  }
+  Serial.println("Setup switches");
 
   // Route for root / web page
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
     request->send_P(200, "text/html", index_html, processor);
   });
 
-  server.on("/update", HTTP_GET, [] (AsyncWebServerRequest * request) {
+  server.on("/update", HTTP_GET, [](AsyncWebServerRequest* request) {
     String inputMessage1;
     String inputMessage2;
     // GET input1 value on <ESP_IP>/update?output=<inputMessage1>&state=<inputMessage2>
-    if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_2)) {
-      inputMessage1 = request->getParam(PARAM_INPUT_1)->value();
-      inputMessage2 = request->getParam(PARAM_INPUT_2)->value();
-      Serial.print(inputMessage1);
-      Serial.print(" needs output: ");
-      Serial.println(inputMessage2);
-    }
-    else if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_3)) {
-      inputMessage1 = request->getParam(PARAM_INPUT_1)->value();
-      inputMessage2 = request->getParam(PARAM_INPUT_3)->value();
-      Serial.print(inputMessage1);
-      Serial.print(" needs value: ");
-      Serial.println(inputMessage2);
-    }
-    else {
-      inputMessage1 = "No message sent";
-      inputMessage2 = "No message sent";
-      Serial.println("else bad");
+    try {
+      if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_2)) {
+        inputMessage1 = request->getParam(PARAM_INPUT_1)->value();
+        inputMessage2 = request->getParam(PARAM_INPUT_2)->value();
+        Serial.print(inputMessage1);
+        Serial.print(" needs output: ");
+        Serial.println(inputMessage2);
+
+        getSwitchByName(inputMessage1)->setOutput(inputMessage2.toInt());
+      } else if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_3)) {
+        inputMessage1 = request->getParam(PARAM_INPUT_1)->value();
+        inputMessage2 = request->getParam(PARAM_INPUT_3)->value();
+        Serial.print(inputMessage1);
+        Serial.print(" needs value: ");
+        Serial.println(inputMessage2);
+
+        getSwitchByName(inputMessage1)->setValue(inputMessage2.toInt());
+      } else {
+        inputMessage1 = "No message sent";
+        inputMessage2 = "No message sent";
+        Serial.println("else bad");
+        request->send(200, "text/plain", "OK");
+        return;
+      }
+    } catch (std::invalid_argument& ex) {
+      Serial.print("Error: ");
+      Serial.println(ex.what());
     }
     request->send(200, "text/plain", "OK");
   });
 
-  server.onNotFound([](AsyncWebServerRequest * request) {
+  server.onNotFound([](AsyncWebServerRequest* request) {
     String with_slash = request->url();
     Serial.print("Weird request: ");
     Serial.println(with_slash);
@@ -112,5 +194,4 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-
 }

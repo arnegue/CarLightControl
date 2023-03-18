@@ -4,7 +4,7 @@ R"rawliteral(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>jQuery Amino Slider Plugin Examples</title>
+    <title>Headlight control</title>
     <link href="https://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
 	<link rel="icon" href="data:,">
     <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
@@ -20,34 +20,6 @@ R"rawliteral(
                 <th>Value</th>
             </tr>
 			%BUTTON_REPLACE%
-<!--            <tr>
-                <td>Ruecklicht</td>
-                <td><input type="checkbox" id="ruecklicht"></td>
-                <td>
-                    <input type="range" min="1" max="100" value="50" class="slider" id="ruecklicht">
-                </td>
-            </tr>
-            <tr>
-                <td>Bremslicht</td>
-                <td><input type="checkbox" id="bremslicht"></td>
-                <td>
-                    <input type="range" min="1" max="100" value="50" class="slider" id="bremslicht">
-                </td>
-            </tr>
-             <tr>
-                <td>Blinker</td>
-                <td><input type="checkbox" id="blinker"></td>
-                <td>
-                    <input type="range" min="1" max="100" value="50" class="slider" id="blinker">
-                </td>
-            </tr>
-             <tr>
-                <td>Rueckfahr</td>
-                <td><input type="checkbox" id="rueckfahr"></td>
-                <td>
-                    <input type="range" min="1" max="100" value="50" class="slider" id="rueckfahr">
-                </td>
-            </tr>-->
         </table>
     </div>
 </div>
