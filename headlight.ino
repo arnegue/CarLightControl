@@ -14,8 +14,6 @@ const char* PARAM_INPUT_3 = "value";
 class PWMSwitch {
 public:
   PWMSwitch(String pwm_name, int pwm_pin, int potentiometer_pin) {
-    Serial.print("Creating new Switch: ");
-    Serial.print(pwm_name);
     this->name = pwm_name;
     this->pwm_pin = pwm_pin;
     this->potentiometer_pin = potentiometer_pin;
@@ -36,10 +34,8 @@ public:
 
   void setOutput(bool on) {
     if (on) {
-      Serial.print(" Setting pwm on ");
       ledcWrite(this->pwm_channel, this->duty_cycle);
     } else {
-      Serial.print("Setting pwm off ");
       ledcWrite(this->pwm_channel, 0);
     }
     this->output_s = on;
@@ -52,10 +48,7 @@ public:
   void setValue(int percentage) {
     this->duty_cycle = ((float)this->MAX_VALUE * (float)percentage) / 100;
     if (this->getOutput()) {
-      Serial.print(" Setting pwm percentage ");
       ledcWrite(this->pwm_channel, this->duty_cycle);
-    } else {
-      Serial.print(" Preparing to set pwm percentage ");
     }
   }
 
@@ -122,9 +115,7 @@ PWMSwitch* getSwitchByName(String name) {
       return pwm_switch;
     }
   }
-  Serial.print("Didn't find Switch: ");
-  Serial.println(name);
-  throw std::invalid_argument("Didn't find Value");
+  throw std::invalid_argument("Didn't find PWMSwitch");
 }
 
 void setup() {
