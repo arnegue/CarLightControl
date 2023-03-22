@@ -75,11 +75,11 @@ protected:
 int PWMSwitch::next_free_pwm_channel = 0;
 
 static std::vector<PWMSwitch*> switches = {
-  //         Name             PIn, PotiPin
-  new PWMSwitch("Ruecklicht", 19, 0),
-  new PWMSwitch("BremsLicht", 0, 0),
-  new PWMSwitch("Blinker", 0, 0),
-  new PWMSwitch("Rueckfahrlicht", 0, 0),
+  //         Name                 PIn, PotiPin
+  new PWMSwitch("Ruecklicht",     13,  15),
+  new PWMSwitch("Rueckfahrlicht", 27,  17),
+  new PWMSwitch("BremsLicht",     32,  21),
+  new PWMSwitch("Blinker",        36,  23),
 };
 
 String processor(const String& var) {
@@ -164,8 +164,7 @@ void setup() {
       } else {
         inputMessage1 = "No message sent";
         inputMessage2 = "No message sent";
-        Serial.println("else bad");
-        request->send(200, "text/plain", "OK");
+        request->send(400, "text/plain", "Not OK");
         return;
       }
     } catch (std::invalid_argument& ex) {
