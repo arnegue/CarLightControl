@@ -47,6 +47,7 @@ public:
 
   void setValue(int percentage) {
     this->duty_cycle = ((float)this->MAX_VALUE * (float)percentage) / 100;
+    // TODO if percentage = 0 -> off
     if (this->getOutput()) {
       ledcWrite(this->pwm_channel, this->duty_cycle);
     }
@@ -78,8 +79,8 @@ static std::vector<PWMSwitch*> switches = {
   //         Name                 PIn, PotiPin
   new PWMSwitch("Ruecklicht",     13,  15),
   new PWMSwitch("Rueckfahrlicht", 27,  17),
-  new PWMSwitch("BremsLicht",     32,  21),
-  new PWMSwitch("Blinker",        36,  23),
+  new PWMSwitch("BremsLicht",     33,  21),
+  new PWMSwitch("Blinker",        32,  23),
 };
 
 String processor(const String& var) {
