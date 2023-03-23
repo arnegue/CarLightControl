@@ -84,8 +84,8 @@ static std::vector<PWMSwitch*> switches = {
 };
 
 String processor(const String& var) {
+  String ret_str = String();
   if (var == "BUTTON_REPLACE") {
-    String ret_str = String();
     for (auto pwm_switch : switches) {
       ret_str += "<tr>";
       ret_str += "<td>" + pwm_switch->getName() + "</td>";
@@ -103,9 +103,8 @@ String processor(const String& var) {
       ret_str += "\" class=\"slider\" id=\"" + pwm_switch->getName() + "\"></td>";
       ret_str += "</tr>";
     }
-    return ret_str;
   }
-  return String();
+  return ret_str;
 }
 
 PWMSwitch* getSwitchByName(String name) {
