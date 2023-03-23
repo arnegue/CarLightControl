@@ -47,8 +47,10 @@ public:
 
   void setValue(int percentage) {
     this->duty_cycle = ((float)this->MAX_VALUE * (float)percentage) / 100;
-    // TODO if percentage = 0 -> off
-    if (this->getOutput()) {
+    if (this->duty_cycle == 0) {  // Turn off to avoid leak current
+      this->setOutput(false);
+    }
+    else if (this->getOutput()) {
       ledcWrite(this->pwm_channel, this->duty_cycle);
     }
   }
