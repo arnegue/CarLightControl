@@ -1,5 +1,8 @@
 #include <ESPAsyncWebSrv.h>
+
 #include "wifi_secrets.h"
+#include "pwm_switch.h"
+#include "blinking_pwm_switch.h"
 
 AsyncWebServer server(80);
 
@@ -7,114 +10,14 @@ const char index_html[] PROGMEM =
 #include "index.h"  // unfortunatelly this only works when manipulating the html to a raw-string, and changing the file extensiomn
   ;
 
-const char* PARAM_INPUT_1 = "name";
-const char* PARAM_INPUT_2 = "state";
-const char* PARAM_INPUT_3 = "value";
-
-class PWMSwitch {
-public:
-  PWMSwitch(String pwm_name, int pwm_pin, int potentiometer_pin) {
-    this->name = pwm_name;
-    this->pwm_pin = pwm_pin;
-    this->potentiometer_pin = potentiometer_pin;
-    this->output_s = false;
-    this->duty_cycle = 0;
-  }
-
-  virtual void setup() {
-    this->pwm_channel = this->next_free_pwm_channel;
-    ledcSetup(this->pwm_channel, this->PWM_FREQ, this->RESOLUTION_BITS);
-    ledcAttachPin(this->pwm_pin, pwm_channel);
-    this->next_free_pwm_channel++;
-  }
-
-  String getName() {
-    return this->name;
-  }
-
-  virtual void setOutput(bool on) {
-    if (on && this->duty_cycle != 0) {
-      ledcWrite(this->pwm_channel, this->duty_cycle);
-    } else {
-      ledcWrite(this->pwm_channel, 0);
-    }
-    this->output_s = on;
-  }
-
-  bool getOutput() {
-    return this->output_s;
-  }
-
-  virtual void setValue(int percentage) {
-    this->duty_cycle = ((float)this->MAX_VALUE * (float)percentage) / 100;
-    if (this->duty_cycle == 0) {  // Turn off to avoid leak current
-      this->setOutput(false);
-    }
-    else if (this->getOutput()) {
-      ledcWrite(this->pwm_channel, this->duty_cycle);
-    }
-  }
-
-  int getValue() {
-    return (this->duty_cycle * 100) / this->MAX_VALUE;
-  }
-protected:
-  String name;
-  bool output_s;
-  int duty_cycle;
-  int pwm_pin;
-  int pwm_channel;
-  int potentiometer_pin;
-  const int PWM_FREQ = 5000;
-  const int RESOLUTION_BITS = 8;
-  const int MAX_VALUE = (1 << RESOLUTION_BITS) - 1;
-
-private:
-  static int next_free_pwm_channel;
-};
-int PWMSwitch::next_free_pwm_channel = 0;
-
-
-hw_timer_t *Timer0_Cfg = NULL;
-void static_c_style_blink_callback();
-
-class BlinkingPWMSwitch: public PWMSwitch {
-  using PWMSwitch::PWMSwitch;  // Don't redefine constructor
-public:
-  void setup() {
-    PWMSwitch::setup();
-    Timer0_Cfg = timerBegin(0, 8000, true);
-    timerAttachInterrupt(Timer0_Cfg, &static_c_style_blink_callback, true);
-    timerAlarmWrite(Timer0_Cfg, 10000, true);
-  }
-
-  void setOutput(bool on) override {
-    PWMSwitch::setOutput(on);
-    if (on) {
-      timerAlarmEnable(Timer0_Cfg);
-    } else {
-      timerAlarmDisable(Timer0_Cfg);
-    }
-  }
-
-  void blink() {
-    bool new_value = ! this->getOutput();
-    PWMSwitch::setOutput(new_value); // Call base class to avoid toggling timer
-  }
-};
-
-BlinkingPWMSwitch* blinker = new BlinkingPWMSwitch("Blinker", 32,  23);
 static std::vector<PWMSwitch*> switches = {
   //         Name                 PIn, PotiPin
-  new PWMSwitch("Ruecklicht",     13,  15),
-  new PWMSwitch("Rueckfahrlicht", 27,  17),
-  new PWMSwitch("BremsLicht",     33,  21),
-  blinker
+  new PWMSwitch("Ruecklicht",      13,  15),
+  new PWMSwitch("Rueckfahrlicht",  27,  17),
+  new PWMSwitch("BremsLicht",      33,  21),
+  new BlinkingPWMSwitch("Blinker", 32,  23),
 };
 
-void static_c_style_blink_callback() {
-  blinker->blink();
-}
 
 String processor(const String& var) {
   String ret_str = String();
@@ -149,6 +52,9 @@ PWMSwitch* getSwitchByName(String name) {
   throw std::invalid_argument("Didn't find PWMSwitch");
 }
 
+const char* PARAM_INPUT_1 = "name";
+const char* PARAM_INPUT_2 = "state";
+const char* PARAM_INPUT_3 = "value";
 void setup() {
   Serial.begin(115200);
 

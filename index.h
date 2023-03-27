@@ -10,7 +10,6 @@ R"rawliteral(
     <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
 </head>
 <body>
-<!-- Amino slider elements -->
 <div class="main">
     <div class="slidecontainer">
         <table>
@@ -24,7 +23,6 @@ R"rawliteral(
     </div>
 </div>
 
-<!-- dependencies -->
 <script type="text/javascript">
     $("input" ).on( "change", function( event ) {
         var value = null
