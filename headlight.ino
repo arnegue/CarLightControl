@@ -21,7 +21,7 @@ public:
     this->duty_cycle = 0;
   }
 
-  void setup() {
+  virtual void setup() {
     this->pwm_channel = this->next_free_pwm_channel;
     ledcSetup(this->pwm_channel, this->PWM_FREQ, this->RESOLUTION_BITS);
     ledcAttachPin(this->pwm_pin, pwm_channel);
@@ -32,8 +32,8 @@ public:
     return this->name;
   }
 
-  void setOutput(bool on) {
-    if (on) {
+  virtual void setOutput(bool on) {
+    if (on && this->duty_cycle != 0) {
       ledcWrite(this->pwm_channel, this->duty_cycle);
     } else {
       ledcWrite(this->pwm_channel, 0);
@@ -45,7 +45,7 @@ public:
     return this->output_s;
   }
 
-  void setValue(int percentage) {
+  virtual void setValue(int percentage) {
     this->duty_cycle = ((float)this->MAX_VALUE * (float)percentage) / 100;
     if (this->duty_cycle == 0) {  // Turn off to avoid leak current
       this->setOutput(false);
@@ -55,15 +55,9 @@ public:
     }
   }
 
-  PWMSwitch* address(void) {
-    return this;
-  }
-
   int getValue() {
     return (this->duty_cycle * 100) / this->MAX_VALUE;
   }
-
-  static int next_free_pwm_channel;  // TODO protected
 protected:
   String name;
   bool output_s;
@@ -74,16 +68,53 @@ protected:
   const int PWM_FREQ = 5000;
   const int RESOLUTION_BITS = 8;
   const int MAX_VALUE = (1 << RESOLUTION_BITS) - 1;
+
+private:
+  static int next_free_pwm_channel;
 };
 int PWMSwitch::next_free_pwm_channel = 0;
 
+
+hw_timer_t *Timer0_Cfg = NULL;
+void static_c_style_blink_callback();
+
+class BlinkingPWMSwitch: public PWMSwitch {
+  using PWMSwitch::PWMSwitch;  // Don't redefine constructor
+public:
+  void setup() {
+    PWMSwitch::setup();
+    Timer0_Cfg = timerBegin(0, 8000, true);
+    timerAttachInterrupt(Timer0_Cfg, &static_c_style_blink_callback, true);
+    timerAlarmWrite(Timer0_Cfg, 10000, true);
+  }
+
+  void setOutput(bool on) override {
+    PWMSwitch::setOutput(on);
+    if (on) {
+      timerAlarmEnable(Timer0_Cfg);
+    } else {
+      timerAlarmDisable(Timer0_Cfg);
+    }
+  }
+
+  void blink() {
+    bool new_value = ! this->getOutput();
+    PWMSwitch::setOutput(new_value); // Call base class to avoid toggling timer
+  }
+};
+
+BlinkingPWMSwitch* blinker = new BlinkingPWMSwitch("Blinker", 32,  23);
 static std::vector<PWMSwitch*> switches = {
   //         Name                 PIn, PotiPin
   new PWMSwitch("Ruecklicht",     13,  15),
   new PWMSwitch("Rueckfahrlicht", 27,  17),
   new PWMSwitch("BremsLicht",     33,  21),
-  new PWMSwitch("Blinker",        32,  23),
+  blinker
 };
+
+void static_c_style_blink_callback() {
+  blinker->blink();
+}
 
 String processor(const String& var) {
   String ret_str = String();
@@ -111,9 +142,7 @@ String processor(const String& var) {
 
 PWMSwitch* getSwitchByName(String name) {
   for (auto pwm_switch : switches) {
-    if (pwm_switch->getName() == name) {      
-      Serial.print("Found switch: ");
-      Serial.println(pwm_switch->getName());
+    if (pwm_switch->getName() == name) {
       return pwm_switch;
     }
   }
