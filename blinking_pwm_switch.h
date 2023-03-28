@@ -7,7 +7,7 @@
 hw_timer_t *Timer0_Cfg = NULL;
 void static_c_style_blink_callback();
 
-class BlinkingPWMSwitch: public PWMSwitch {
+class BlinkingPWMSwitch : public PWMSwitch {
   using PWMSwitch::PWMSwitch;  // Don't redefine constructor
 public:
   void setup() {
@@ -31,28 +31,53 @@ public:
       }
       if (blinkers.size() == 0) {
         timerAlarmDisable(Timer0_Cfg);
-      }      
+      }
     }
   }
 
   void blink() {
-    bool new_value = ! this->getOutput();
-    PWMSwitch::setOutput(new_value); // Call base class to avoid toggling timer
+    bool new_value = !this->getOutput();
+    PWMSwitch::setOutput(new_value);  // Call base class to avoid toggling timer
   }
 
-  static std::set<BlinkingPWMSwitch*> getBlinkers() {
+  static std::set<BlinkingPWMSwitch *> getBlinkers() {
     return blinkers;
   }
 
+  virtual void measure_potentiometer_set_value() override {
+    int sensor_value = analogRead(this->potentiometer_pin);
+    sensor_value = (100 * sensor_value) / this->MAX_ANALOG_IN;
+    if (abs(sensor_value - this->last_measure_changed_value_perc) > this->CHANGE_PERC) {
+      this->setValue(sensor_value);
+      this->last_measure_changed_value_perc = sensor_value;
+
+      bool is_enabled = false;
+      auto it = std::find(blinkers.begin(), blinkers.end(), this);
+      if (it != blinkers.end()) {
+        is_enabled = true;
+      }
+
+      if (sensor_value < this->CHANGE_PERC) {
+        if (is_enabled) {
+          this->setOutput(false);
+        }
+      } else {
+        if (!is_enabled) {
+          this->setOutput(true);
+        }
+      }
+    }
+  }
+
 protected:
-  static std::set<BlinkingPWMSwitch*> blinkers;
+  static std::set<BlinkingPWMSwitch *> blinkers;
 };
 
-std::set<BlinkingPWMSwitch*> BlinkingPWMSwitch::blinkers = std::set<BlinkingPWMSwitch*>();
+std::set<BlinkingPWMSwitch *> BlinkingPWMSwitch::blinkers = std::set<BlinkingPWMSwitch *>();
 void static_c_style_blink_callback() {
   for (auto blinker : BlinkingPWMSwitch::getBlinkers()) {
     blinker->blink();
   }
 }
 
-#endif // BLINKING_PWM_SWITCH_H
+#endif  // BLINKING_PWM_SWITCH_H

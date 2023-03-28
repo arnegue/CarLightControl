@@ -11,11 +11,11 @@ const char index_html[] PROGMEM =
   ;
 
 static std::vector<PWMSwitch*> switches = {
-  //         Name                 PIn, PotiPin
-  new PWMSwitch("Ruecklicht",      13,  15),
-  new PWMSwitch("Rueckfahrlicht",  27,  17),
-  new PWMSwitch("BremsLicht",      33,  21),
-  new BlinkingPWMSwitch("Blinker", 32,  23),
+  //         Name              PWMPin, PotiPin
+  new PWMSwitch("Ruecklicht",      13,  35),
+  new PWMSwitch("Rueckfahrlicht",  27,  34),
+  new PWMSwitch("BremsLicht",      33,  39),
+  new BlinkingPWMSwitch("Blinker", 32,  36),
 };
 
 
@@ -120,5 +120,8 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  for (auto pwm_switch : switches) {
+    pwm_switch->measure_potentiometer_set_value();
+  }
+  delay(500);
 }
