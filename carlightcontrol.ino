@@ -13,9 +13,9 @@ const char index_html[] PROGMEM =
 static std::vector<PWMSwitch*> switches = {
   //         Name              PWMPin, PotiPin
   new PWMSwitch("Ruecklicht",      13,  35),
-  new PWMSwitch("Rueckfahrlicht",  27,  34),
-  new PWMSwitch("BremsLicht",      33,  39),
-  new BlinkingPWMSwitch("Blinker", 32,  36),
+  new PWMSwitch("BremsLicht",      27,  34),
+  new BlinkingPWMSwitch("Blinker", 33,  39),
+  new PWMSwitch("Rueckfahrlicht",  32,  36),
 };
 
 
