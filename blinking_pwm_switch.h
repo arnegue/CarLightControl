@@ -47,7 +47,11 @@ public:
   virtual void measure_potentiometer_set_value() override {
     int sensor_value = analogRead(this->potentiometer_pin);
     sensor_value = (100 * sensor_value) / this->MAX_ANALOG_IN;
-    if (abs(sensor_value - this->last_measure_changed_value_perc) > this->CHANGE_PERC) {
+    if (this->last_measure_changed_value_perc == -1) {
+      // Avoid change-detection on start-up
+      this->last_measure_changed_value_perc = sensor_value;
+    }
+    else if (abs(sensor_value - this->last_measure_changed_value_perc) > this->CHANGE_PERC) {
       this->setValue(sensor_value);
       this->last_measure_changed_value_perc = sensor_value;
 

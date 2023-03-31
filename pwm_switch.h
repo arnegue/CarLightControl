@@ -9,7 +9,7 @@ public:
     this->potentiometer_pin = potentiometer_pin;
     this->output_s = false;
     this->duty_cycle = 0;
-    this->last_measure_changed_value_perc = 0;
+    this->last_measure_changed_value_perc = -1;
   }
 
   virtual void setup() {
