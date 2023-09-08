@@ -40,8 +40,7 @@ public:
     this->duty_cycle = ((float)this->MAX_VALUE * (float)percentage) / 100;
     if (this->duty_cycle == 0) {  // Turn off to avoid leak current
       this->setOutput(false);
-    }
-    else if (this->getOutput()) {
+    } else if (this->getOutput()) {
       ledcWrite(this->pwm_channel, this->duty_cycle);
     }
   }
@@ -49,7 +48,7 @@ public:
   int getValue() {
     return (this->duty_cycle * 100) / this->MAX_VALUE;
   }
-  
+
   virtual void measure_potentiometer_set_value() {
     int sensor_value = analogRead(this->potentiometer_pin);
     sensor_value = (100 * sensor_value) / this->MAX_ANALOG_IN;
@@ -69,7 +68,7 @@ public:
   }
 
 protected:
-  String name;  // Name for logging and showing in web-ui
+  String name;    // Name for logging and showing in web-ui
   bool output_s;  // output enable
   int duty_cycle;
   int pwm_pin;
@@ -79,7 +78,7 @@ protected:
 
   // Constants
   //   PWM
-  static const int PWM_FREQ = 5000;
+  static const int PWM_FREQ = 500;
   static const int RESOLUTION_BITS = 8;
   //   Analog
   static const int MAX_VALUE = (1 << RESOLUTION_BITS) - 1;
@@ -90,4 +89,4 @@ private:
 };
 int PWMSwitch::next_free_pwm_channel = 0;
 
-#endif // PWM_SWITCH_H
+#endif  // PWM_SWITCH_H
