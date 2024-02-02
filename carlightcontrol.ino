@@ -7,18 +7,27 @@
 AsyncWebServer server(80);
 
 const char index_html[] PROGMEM =
-#include "index.h"  // unfortunatelly this only works when manipulating the html to a raw-string, and changing the file extensiomn
+#include "index.h"  // unfortunatelly this only works when manipulating the html to a raw-string, and changing the file extension
   ;
 
+
+// Create instances of Lights
+//                         Name              PWMPin, PotiPin
+PWMSwitch ruecklicht      {"Ruecklicht",      13,  35};
+PWMSwitch bremslicht      {"BremsLicht",      27,  34};
+BlinkingPWMSwitch blinker {"Blinker",         33,  39};
+PWMSwitch rueckfahrlicht  {"Rueckfahrlicht",  32,  36};
+
+// Add lights to vector
 static std::vector<PWMSwitch*> switches = {
-  //         Name              PWMPin, PotiPin
-  new PWMSwitch("Ruecklicht",      13,  35),
-  new PWMSwitch("BremsLicht",      27,  34),
-  new BlinkingPWMSwitch("Blinker", 33,  39),
-  new PWMSwitch("Rueckfahrlicht",  32,  36),
+  &ruecklicht,
+  &bremslicht,
+  &blinker,
+  &rueckfahrlicht
 };
 
 
+// Callback for HTTP-Request. Manipulates index.h(tml) and replaces each BUTTON_REPLACE with switch conteent
 String processor(const String& var) {
   String ret_str = String();
   if (var == "BUTTON_REPLACE") {
@@ -43,6 +52,7 @@ String processor(const String& var) {
   return ret_str;
 }
 
+// Returns switch by name or raises Exception if not found
 PWMSwitch* getSwitchByName(String name) {
   for (auto pwm_switch : switches) {
     if (pwm_switch->getName() == name) {
@@ -55,6 +65,8 @@ PWMSwitch* getSwitchByName(String name) {
 const char* PARAM_INPUT_1 = "name";
 const char* PARAM_INPUT_2 = "state";
 const char* PARAM_INPUT_3 = "value";
+
+// Setup routine. Setups Serial, WiFi, Switches and instatiates callback for HTTP_Server
 void setup() {
   Serial.begin(115200);
 
@@ -82,43 +94,51 @@ void setup() {
     String inputMessage2;
     // GET input1 value on <ESP_IP>/update?output=<inputMessage1>&state=<inputMessage2>
     try {
+      // Toggle light on/off
       if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_2)) {
         inputMessage1 = request->getParam(PARAM_INPUT_1)->value();
         inputMessage2 = request->getParam(PARAM_INPUT_2)->value();
         Serial.print(inputMessage1);
         Serial.print(" needs output: ");
         Serial.println(inputMessage2);
-
         getSwitchByName(inputMessage1)->setOutput(inputMessage2.toInt());
-      } else if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_3)) {
+      }
+      // Set PWM-value of light
+      else if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_3)) {
         inputMessage1 = request->getParam(PARAM_INPUT_1)->value();
         inputMessage2 = request->getParam(PARAM_INPUT_3)->value();
         Serial.print(inputMessage1);
         Serial.print(" needs value: ");
         Serial.println(inputMessage2);
-
         getSwitchByName(inputMessage1)->setValue(inputMessage2.toInt());
-      } else {
+      } 
+      // Unknown
+      else {
         inputMessage1 = "No message sent";
         inputMessage2 = "No message sent";
         request->send(400, "text/plain", "Not OK");
         return;
       }
-    } catch (std::invalid_argument& ex) {
+    } 
+    catch (std::invalid_argument& ex) {
       Serial.print("Error: ");
       Serial.println(ex.what());
     }
     request->send(200, "text/plain", "OK");
   });
 
+  // Set callback if request is unknown
   server.onNotFound([](AsyncWebServerRequest* request) {
     String with_slash = request->url();
     Serial.print("Weird request: ");
     Serial.println(with_slash);
   });
+
+  // Start servre
   server.begin();
 }
 
+// Loop which polls potentiometer values. If a value changed, override current one (else keep the one either set by previous pwm or from server)
 void loop() {
   for (auto pwm_switch : switches) {
     pwm_switch->measure_potentiometer_set_value();
