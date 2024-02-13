@@ -4,6 +4,8 @@
 #include "pwm_switch.h"
 #include "blinking_pwm_switch.h"
 
+#define ENABLE_POTENTIOMETER  /* You may want to disable them for testing */
+
 AsyncWebServer server(80);
 
 const char index_html[] PROGMEM =
@@ -140,8 +142,10 @@ void setup() {
 
 // Loop which polls potentiometer values. If a value changed, override current one (else keep the one either set by previous pwm or from server)
 void loop() {
+#ifdef ENABLE_POTENTIOMETER
   for (auto pwm_switch : switches) {
     pwm_switch->measure_potentiometer_set_value();
   }
+#endif
   delay(500);
 }
