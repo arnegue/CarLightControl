@@ -8,6 +8,7 @@
 
 AsyncWebServer server(80);
 
+// This is kind of a hack to store file content into a variable. In this case the index.h(tml) 
 const char index_html[] PROGMEM =
 #include "index.h"  // unfortunatelly this only works when manipulating the html to a raw-string, and changing the file extension
   ;
@@ -21,7 +22,7 @@ BlinkingPWMSwitch blinker {"Blinker",         33,  39};
 PWMSwitch rueckfahrlicht  {"Rueckfahrlicht",  32,  36};
 
 // Add lights to vector
-static std::vector<PWMSwitch*> switches = {
+const static std::vector<PWMSwitch*> switches = {
   &ruecklicht,
   &bremslicht,
   &blinker,
@@ -31,23 +32,23 @@ static std::vector<PWMSwitch*> switches = {
 
 // Callback for HTTP-Request. Manipulates index.h(tml) and replaces each BUTTON_REPLACE with switch conteent
 String processor(const String& var) {
-  String ret_str = String();
+  auto ret_str = String();
   if (var == "BUTTON_REPLACE") {
     for (auto pwm_switch : switches) {
       ret_str += "<tr>";
       ret_str += "<td>" + pwm_switch->getName() + "</td>";
 
       // Checkbox
-      ret_str += "<td><input type=\"checkbox\" id=\"" + pwm_switch->getName() + "\"";
+      ret_str += R"(<td><input type="checkbox" id=")" + pwm_switch->getName() + "\"";
       if (pwm_switch->getOutput()) {
         ret_str += " checked ";
       }
       ret_str += "></td>";
 
       // Slider
-      ret_str += "<td><input type=\"range\" min=\"1\" max=\"100\" value=\"";
+      ret_str += R"(<td><input type="range" min="1" max="100" value=")";
       ret_str += String(pwm_switch->getValue());
-      ret_str += "\" class=\"slider\" id=\"" + pwm_switch->getName() + "\"></td>";
+      ret_str += R"(" class="slider" id=")" + pwm_switch->getName() + "\"></td>";
       ret_str += "</tr>";
     }
   }
@@ -55,7 +56,7 @@ String processor(const String& var) {
 }
 
 // Returns switch by name or raises Exception if not found
-PWMSwitch* getSwitchByName(String name) {
+PWMSwitch* getSwitchByName(const String& name) {
   for (auto pwm_switch : switches) {
     if (pwm_switch->getName() == name) {
       return pwm_switch;
@@ -73,8 +74,8 @@ void setup() {
   Serial.begin(115200);
 
   WiFi.begin(ssid, password);
-  WiFi.setHostname("headlight1");
-  while (WiFi.status() != WL_CONNECTED) {
+  WiFiClass::setHostname("headlight1");
+  while (WiFiClass::status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi...");
   }
@@ -130,10 +131,10 @@ void setup() {
   });
 
   // Set callback if request is unknown
-  server.onNotFound([](AsyncWebServerRequest* request) {
-    String with_slash = request->url();
-    Serial.print("Weird request: ");
-    Serial.println(with_slash);
+  server.onNotFound([](AsyncWebServerRequest const* request) {
+    String unkown_request = request->url();
+    Serial.print("Unknown request: ");
+    Serial.println(unkown_request);
   });
 
   // Start servre

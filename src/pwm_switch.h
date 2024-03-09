@@ -8,9 +8,11 @@ public:
       pwm_pin(pwm_pin),
       pwm_channel(getNextPWMChannel()),
       potentiometer_pin(potentiometer_pin),
-      output_s(false),
       duty_cycle(0),
       last_measure_changed_value_perc(-1) {}
+
+  // Default base destructor
+  virtual ~PWMSwitch() = default;
 
   // Return next pwm channel. Only call once per instance!
   static uint getNextPWMChannel() {
@@ -18,7 +20,7 @@ public:
   }
   // Sets up PWM
   virtual void setup() {
-    ledcSetup(this->pwm_channel, this->PWM_FREQ, this->RESOLUTION_BITS);
+    ledcSetup(this->pwm_channel, PWMSwitch::PWM_FREQ, PWMSwitch::RESOLUTION_BITS);
     ledcAttachPin(this->pwm_pin, pwm_channel);
   }
 
@@ -46,7 +48,7 @@ public:
   // If given percentage is 0, switch off
   // If given percentage above 0, switch (on) to given value
   virtual void setValue(uint percentage) {
-    this->duty_cycle = ((float)this->MAX_VALUE * (float)percentage) / 100;
+    this->duty_cycle = ((float)PWMSwitch::MAX_VALUE * (float)percentage) / 100;
     if (this->duty_cycle == 0) {  // Turn off to avoid leak current
       this->setOutput(false);
     } else if (this->getOutput()) {
@@ -56,13 +58,13 @@ public:
 
   // Returns current duty-cycle in percent
   int getValue() {
-    return (this->duty_cycle * 100) / this->MAX_VALUE;
+    return (this->duty_cycle * 100) / PWMSwitch::MAX_VALUE;
   }
 
   // Measures potentiometer pin. If value changed over threshold (CHANGE_PERC), set value to pwm
   virtual void measure_potentiometer_set_value() {
     int sensor_value = analogRead(this->potentiometer_pin);
-    sensor_value = (100 * sensor_value) / this->MAX_ANALOG_IN;
+    sensor_value = (100 * sensor_value) / PWMSwitch::MAX_ANALOG_IN;
 
     uint diff = 0;
     if (sensor_value > this->last_measure_changed_value_perc) {
@@ -70,11 +72,11 @@ public:
     } else {
       diff = this->last_measure_changed_value_perc - sensor_value;
     }
-    if (diff > this->CHANGE_PERC) {
+    if (diff > PWMSwitch::CHANGE_PERC) {
       this->setValue(sensor_value);
       this->last_measure_changed_value_perc = sensor_value;
       // If value is below CHANGE_PERC turn it off
-      if (sensor_value < this->CHANGE_PERC) {
+      if (sensor_value < PWMSwitch::CHANGE_PERC) {
         if (this->getOutput() == true) {
           this->setOutput(false);
         }
@@ -87,8 +89,8 @@ public:
   }
 
 protected:
-  String name;                           // Name for logging
-  bool output_s;                         // output enable
+  const String name;                     // Name for logging
+  bool output_s = false;                 // output enable
   uint duty_cycle;                       // Currently set duty-cycle
   const uint pwm_pin;                    // PWM-Pin
   const uint pwm_channel;                // PWM channel used for PWM pin

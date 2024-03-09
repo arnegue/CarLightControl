@@ -2,7 +2,9 @@
 #define BLINKING_PWM_SWITCH_H
 
 #include <set>
+#include <algorithm>
 #include "pwm_switch.h"
+#include <esp32-hal-timer.h>
 
 void blink_callback();  // Forward declaration of blink_callback
 
@@ -12,19 +14,22 @@ public:
   void setup() override {
     PWMSwitch::setup();
     // Setup timer if not already set up
-    if (BlinkTimerCfg == NULL) {
+    if (BlinkTimerCfg == nullptr) {
       BlinkTimerCfg = timerBegin(TIMER_NUMBER, TIMER_PRESCALER, TIMER_COUNT_UP_OR_DOWN);
       timerAttachInterrupt(BlinkTimerCfg, &blink_callback, true);
       timerAlarmWrite(BlinkTimerCfg, TIMER_TICKS, true);
     }
   }
+  
+  // Default base destructor
+  virtual ~BlinkingPWMSwitch() = default;
 
   // Enables blinker. If so, add it to active_blinkers-list so that timer may toggle it in callback
   void setOutput(bool on) override {
     PWMSwitch::setOutput(on);
     if (on) {
       // Activate timer when first blinker gets enabled
-      if (active_blinkers.size() == 0) {
+      if (active_blinkers.empty()) {
         timerAlarmEnable(BlinkTimerCfg);
       }
       active_blinkers.insert(this);
@@ -34,7 +39,7 @@ public:
         active_blinkers.erase(this);
       }
       // Disable timer when last blinker gets disabled
-      if (active_blinkers.size() == 0) {
+      if (active_blinkers.empty()) {
         timerAlarmDisable(BlinkTimerCfg);
       }
     }
@@ -51,9 +56,9 @@ public:
     return active_blinkers;
   }
 
-  virtual void measure_potentiometer_set_value() override {
+  void measure_potentiometer_set_value() override {
     int sensor_value = analogRead(this->potentiometer_pin);
-    sensor_value = (100 * sensor_value) / this->MAX_ANALOG_IN;
+    sensor_value = (100 * sensor_value) / BlinkingPWMSwitch::MAX_ANALOG_IN;
 
     uint diff = 0;
     if (sensor_value > this->last_measure_changed_value_perc) {
@@ -64,7 +69,7 @@ public:
     if (this->last_measure_changed_value_perc == -1) {
       // Avoid change-detection on start-up
       this->last_measure_changed_value_perc = sensor_value;
-    } else if (diff > this->CHANGE_PERC) {
+    } else if (diff > BlinkingPWMSwitch::CHANGE_PERC) {
       this->setValue(sensor_value);
       this->last_measure_changed_value_perc = sensor_value;
 
@@ -74,7 +79,7 @@ public:
         is_enabled = true;
       }
 
-      if (sensor_value < this->CHANGE_PERC) {
+      if (sensor_value < BlinkingPWMSwitch::CHANGE_PERC) {
         if (is_enabled) {
           this->setOutput(false);
         }
@@ -97,7 +102,7 @@ protected:
 };
 
 std::set<BlinkingPWMSwitch *> BlinkingPWMSwitch::active_blinkers = std::set<BlinkingPWMSwitch *>();
-hw_timer_t *BlinkingPWMSwitch::BlinkTimerCfg = NULL;
+hw_timer_t *BlinkingPWMSwitch::BlinkTimerCfg = nullptr;
 
 // Callbacks. Toggles all active blinkers
 void blink_callback() {
