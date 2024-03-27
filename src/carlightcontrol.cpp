@@ -14,12 +14,12 @@ const char index_html[] PROGMEM =
     ;
 
 // Create instances of Lights
-//                         Name              PWMPin, PotiPin
-PWMSwitch ruecklicht{"Ruecklicht", 13, 35};
-PWMSwitch bremslicht{"BremsLicht", 27, 34};
-BlinkingPWMSwitch blinker{"Blinker", 33, 39};
-PWMSwitch rueckfahrlicht{"Rueckfahrlicht", 32, 36};
-
+//                         Name             PWMPin, PotiPin
+PWMSwitch ruecklicht{     "Ruecklicht",     13,     35};
+PWMSwitch bremslicht{     "BremsLicht",     27,     34};
+BlinkingPWMSwitch blinker{"Blinker",        33,     39};
+PWMSwitch rueckfahrlicht{ "Rueckfahrlicht", 32,     36};
+    
 // Add lights to vector
 const static std::vector<PWMSwitch *> switches = {
     &ruecklicht,
@@ -27,7 +27,7 @@ const static std::vector<PWMSwitch *> switches = {
     &blinker,
     &rueckfahrlicht};
 
-// Callback for HTTP-Request. Manipulates index.h(tml) and replaces each BUTTON_REPLACE with switch conteent
+// Callback for HTTP-Request. Manipulates index.h(tml) and replaces each BUTTON_REPLACE with switch content
 String processor(const String &var)
 {
     auto ret_str = String();
@@ -100,41 +100,41 @@ void setup()
 
     server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-    String inputMessage1;
-    String inputMessage2;
-    // GET input1 value on <ESP_IP>/update?output=<inputMessage1>&state=<inputMessage2>
-    try {
-      // Toggle light on/off
-      if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_2)) {
-        inputMessage1 = request->getParam(PARAM_INPUT_1)->value();
-        inputMessage2 = request->getParam(PARAM_INPUT_2)->value();
-        Serial.print(inputMessage1);
-        Serial.print(" needs output: ");
-        Serial.println(inputMessage2);
-        getSwitchByName(inputMessage1)->setOutput(inputMessage2.toInt());
-      }
-      // Set PWM-value of light
-      else if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_3)) {
-        inputMessage1 = request->getParam(PARAM_INPUT_1)->value();
-        inputMessage2 = request->getParam(PARAM_INPUT_3)->value();
-        Serial.print(inputMessage1);
-        Serial.print(" needs value: ");
-        Serial.println(inputMessage2);
-        getSwitchByName(inputMessage1)->setValue(inputMessage2.toInt());
-      } 
-      // Unknown
-      else {
-        inputMessage1 = "No message sent";
-        inputMessage2 = "No message sent";
-        request->send(400, "text/plain", "Not OK");
-        return;
-      }
-    } 
-    catch (std::invalid_argument& ex) {
-      Serial.print("Error: ");
-      Serial.println(ex.what());
-    }
-    request->send(200, "text/plain", "OK"); });
+        String inputMessage1;
+        String inputMessage2;
+        // GET input1 value on <ESP_IP>/update?output=<inputMessage1>&state=<inputMessage2>
+        try {
+            // Toggle light on/off
+            if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_2)) {
+                inputMessage1 = request->getParam(PARAM_INPUT_1)->value();
+                inputMessage2 = request->getParam(PARAM_INPUT_2)->value();
+                Serial.print(inputMessage1);
+                Serial.print(" needs output: ");
+                Serial.println(inputMessage2);
+                getSwitchByName(inputMessage1)->setOutput(inputMessage2.toInt());
+            }
+            // Set PWM-value of light
+            else if (request->hasParam(PARAM_INPUT_1) && request->hasParam(PARAM_INPUT_3)) {
+                inputMessage1 = request->getParam(PARAM_INPUT_1)->value();
+                inputMessage2 = request->getParam(PARAM_INPUT_3)->value();
+                Serial.print(inputMessage1);
+                Serial.print(" needs value: ");
+                Serial.println(inputMessage2);
+                getSwitchByName(inputMessage1)->setValue(inputMessage2.toInt());
+            } 
+            // Unknown
+            else {
+                inputMessage1 = "No message sent";
+                inputMessage2 = "No message sent";
+                request->send(400, "text/plain", "Not OK");
+                return;
+            }
+        } 
+        catch (std::invalid_argument& ex) {
+            Serial.print("Error: ");
+            Serial.println(ex.what());
+        }
+        request->send(200, "text/plain", "OK"); });
 
     // Set callback if request is unknown
     server.onNotFound([](AsyncWebServerRequest const *request)
@@ -143,7 +143,7 @@ void setup()
     Serial.print("Unknown request: ");
     Serial.println(unkown_request); });
 
-    // Start servre
+    // Start server
     server.begin();
 }
 
