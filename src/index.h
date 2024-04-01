@@ -6,22 +6,26 @@ R"rawliteral(
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Taillight control</title>
     <link href="https://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="icon" href="data:,">
     <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
 </head>
-<body>
+<body style="margin:20px">
+<h1>Light control</h1>
 <div class="main">
     <div class="slidecontainer">
-        <table>
+        <table class="w3-table w3-striped w3-white">
             <tr>
-                <th>Name</th>
-                <th>On/Off</th>
-                <th>Value</th>
+                <th style="width:30%%">Name</th>
+                <th style="width:20%%">On/Off</th>
+                <th style="width:50%%">Value</th>
             </tr>
             %BUTTON_REPLACE%
         </table>
     </div>
 
+<h1>Update</h1>
     <form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>
     <input type='file' name='update' accept=".bin" id='file'>
     <input type='submit' class=btn value='Update'>
@@ -79,19 +83,19 @@ R"rawliteral(
                 if (evt.lengthComputable) {
                     var per = evt.loaded / evt.total;
                     console.log(per);
-                    $('#prg').html('progress: ' + Math.round(per*100) + '%');
-                    $('#bar').css('width',Math.round(per*100) + '%');
+                    $('#prg').html('progress: ' + Math.round(per*100));
+                    $('#bar').css('width',Math.round(per*100));
                 }
             }, false);
             return xhr;
         },
         success:function(d, s) {
-            console.log('success!'
-            location.reload();    
+            console.log('success!');
+            location.reload(true);    
         },
             error: function (a, b, c) {
-            console.log('error!')    
-            location.reload();    
+            console.log('error!');
+            location.reload(true);    
         }
         });
     });

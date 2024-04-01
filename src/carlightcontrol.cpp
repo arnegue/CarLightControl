@@ -50,7 +50,7 @@ String processor(const String &var)
             ret_str += "></td>";
 
             // Slider
-            ret_str += R"(<td><input type="range" min="1" max="100" value=")";
+            ret_str += R"(<td><input style="width:100%%" type="range" min="1" max="100" value=")";
             ret_str += String(pwm_switch->getValue());
             ret_str += R"(" class="slider" id=")" + pwm_switch->getName() + "\"></td>";
             ret_str += "</tr>";
