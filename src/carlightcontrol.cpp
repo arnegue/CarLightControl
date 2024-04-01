@@ -2,8 +2,8 @@
 #include <Update.h>
 
 #include "wifi_secrets.h"
-#include "pwm_switch.h"
-#include "blinking_pwm_switch.h"
+#include "pwm_switch.hpp"
+#include "blinking_pwm_switch.hpp"
 
 #define ENABLE_POTENTIOMETER /* You might want to disable them for testing */
 
@@ -76,9 +76,9 @@ PWMSwitch *getSwitchByName(const String &name)
     throw std::invalid_argument("Didn't find PWMSwitch");
 }
 
-const char *PARAM_INPUT_1 = "name";
-const char *PARAM_INPUT_2 = "state";
-const char *PARAM_INPUT_3 = "value";
+const String PARAM_INPUT_1 = "name";
+const String PARAM_INPUT_2 = "state";
+const String PARAM_INPUT_3 = "value";
 
 // Setup routine. Setups Serial, WiFi, Switches and instantiates callback for HTTP_Server
 void setup()

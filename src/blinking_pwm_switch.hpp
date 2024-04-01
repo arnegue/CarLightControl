@@ -3,7 +3,7 @@
 
 #include <set>
 #include <algorithm>
-#include "pwm_switch.h"
+#include "pwm_switch.hpp"
 #include <esp32-hal-timer.h>
 
 void blink_callback(); // Forward declaration of blink_callback
