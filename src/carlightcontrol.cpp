@@ -17,10 +17,10 @@ const char index_html[] PROGMEM =
 // clang-format off
 // Create instances of Lights
 //                         Name             PWMPin, PotiPin
-PWMSwitch ruecklicht{     "Ruecklicht",     13,     35};
-PWMSwitch bremslicht{     "BremsLicht",     27,     34};
-BlinkingPWMSwitch blinker{"Blinker",        33,     39};
-PWMSwitch rueckfahrlicht{ "Rueckfahrlicht", 32,     36};
+PWMSwitch ruecklicht{     "Ruecklicht",     13,     35}; // PWM1
+PWMSwitch bremslicht{     "BremsLicht",     27,     34}; // PWM2
+BlinkingPWMSwitch blinker{"Blinker",        33,     39}; // PWM3
+PWMSwitch rueckfahrlicht{ "Rueckfahrlicht", 32,     36}; // PWM4
 // clang-format on
 
 // Add lights to vector
