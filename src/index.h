@@ -30,9 +30,7 @@ R"rawliteral(
     <input type='file' name='update' accept=".bin" id='file'>
     <input type='submit' class=btn value='Update'>
     <br>
-        <div id='prgbar'>
-            <div id='bar'></div>
-        </div>
+        <label id="progressText"></label>
     <br>
     <p>Compiled on %DATE%</p>
 </form>
@@ -82,19 +80,25 @@ R"rawliteral(
             xhr.upload.addEventListener('progress', function(evt) {
                 if (evt.lengthComputable) {
                     var per = evt.loaded / evt.total;
-                    console.log(per);
-                    $('#prg').html('progress: ' + Math.round(per*100));
-                    $('#bar').css('width',Math.round(per*100));
+                    console.log(per);                    
+                    let labelElement = document.getElementById("progressText");
+                    if (per==1) {
+                        labelElement.innerHTML = "Upload successful. Installing...";
+                    } else {
+                        labelElement.innerHTML = "Upload progress: " + Math.round(per*100) + " %%";
+                    }
                 }
             }, false);
             return xhr;
         },
         success:function(d, s) {
-            console.log('success!');
+            let labelElement = document.getElementById("progressText");
+            labelElement.innerHTML = "Update successful. Restarting...";
             location.reload(true);    
         },
             error: function (a, b, c) {
-            console.log('error!');
+            let labelElement = document.getElementById("progressText");
+            labelElement.innerHTML = "Update failed. Restarting...";
             location.reload(true);    
         }
         });
