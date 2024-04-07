@@ -1,22 +1,24 @@
 #ifndef PWM_SWITCH_H
 #define PWM_SWITCH_H
 
+#include <WString.h>
+#include <stdint.h>
+#include <esp32-hal.h>
+
 class PWMSwitch
 {
 public:
-    PWMSwitch(String pwm_name, int pwm_pin, int potentiometer_pin)
+    PWMSwitch(const String &pwm_name, uint8_t pwm_pin, uint8_t potentiometer_pin)
         : name(pwm_name),
           pwm_pin(pwm_pin),
           pwm_channel(getNextPWMChannel()),
-          potentiometer_pin(potentiometer_pin),
-          duty_cycle(0),
-          last_measure_changed_value_perc(-1) {}
+          potentiometer_pin(potentiometer_pin) {}
 
     // Default base destructor
     virtual ~PWMSwitch() = default;
 
     // Return next pwm channel. Only call once per instance!
-    static uint getNextPWMChannel()
+    static uint8_t getNextPWMChannel()
     {
         return next_free_pwm_channel++;
     }
@@ -28,7 +30,7 @@ public:
     }
 
     // Returns name of switch
-    String getName()
+    const String& getName() const
     {
         return this->name;
     }
@@ -48,7 +50,7 @@ public:
     }
 
     // Returns if the PWM Switch is powered on
-    bool getOutput()
+    bool getOutput() const
     {
         return this->output_s;
     }
@@ -56,9 +58,9 @@ public:
     // Sets duty-cycle. (calculated from given percentage)
     // If given percentage is 0, switch off
     // If given percentage above 0, switch (on) to given value
-    virtual void setValue(uint percentage)
+    virtual void setValue(uint8_t percentage)
     {
-        this->duty_cycle = ((float)PWMSwitch::MAX_VALUE * (float)percentage) / 100;
+        this->duty_cycle = (PWMSwitch::MAX_VALUE * percentage) / 100;
         if (this->duty_cycle == 0)
         { // Turn off to avoid leak current
             this->setOutput(false);
@@ -70,7 +72,7 @@ public:
     }
 
     // Returns current duty-cycle in percent
-    int getValue()
+    int getValue() const
     {
         return (this->duty_cycle * 100) / PWMSwitch::MAX_VALUE;
     }
@@ -78,7 +80,7 @@ public:
     // Measures potentiometer pin. If value changed over threshold (CHANGE_PERC), set value to pwm
     virtual void measure_potentiometer_set_value()
     {
-        int sensor_value = analogRead(this->potentiometer_pin);
+        uint16_t sensor_value = analogRead(this->potentiometer_pin);
         sensor_value = (100 * sensor_value) / PWMSwitch::MAX_ANALOG_IN;
 
         uint diff = 0;
@@ -92,7 +94,7 @@ public:
         }
         if (diff > PWMSwitch::CHANGE_PERC)
         {
-            this->setValue(sensor_value);
+            this->setValue(sensor_value); // TODO uint16_t
             this->last_measure_changed_value_perc = sensor_value;
             // If value is below CHANGE_PERC turn it off
             if (sensor_value < PWMSwitch::CHANGE_PERC)
@@ -113,13 +115,13 @@ public:
     }
 
 protected:
-    const String name;                    // Name for logging
-    bool output_s = false;                // output enable
-    uint duty_cycle;                      // Currently set duty-cycle
-    const uint pwm_pin;                   // PWM-Pin
-    const uint pwm_channel;               // PWM channel used for PWM pin
-    const uint potentiometer_pin;         // Anlog pin for potentiometer
-    uint last_measure_changed_value_perc; // Last measued potentiometer value (to detect changes)
+    const String name;                           // Name for logging
+    bool output_s = false;                       // output enable
+    uint8_t duty_cycle = 0;                      // Currently set duty-cycle
+    const uint8_t pwm_pin;                       // PWM-Pin
+    const uint8_t pwm_channel;                   // PWM channel used for PWM pin
+    const uint8_t potentiometer_pin;             // Analog pin for potentiometer
+    uint8_t last_measure_changed_value_perc = 0; // Last measured potentiometer value (to detect changes)
 
     // Constants
     //   PWM
@@ -130,8 +132,7 @@ protected:
     static const int MAX_ANALOG_IN = 0xFFF; // Maximum analog value (12 bit)
     static const int CHANGE_PERC = 5;       // Avoid oscillation, only trigger if this value differ
 private:
-    static int next_free_pwm_channel; // Internal counter. For each switch a counter
+    static uint8_t next_free_pwm_channel; // Internal counter. For each switch a counter
 };
-int PWMSwitch::next_free_pwm_channel = 0;
 
 #endif // PWM_SWITCH_H
