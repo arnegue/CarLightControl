@@ -13,7 +13,12 @@ The code controls 5 lights of one backlight of a car:
 Each light is individually dimmable. Blinker is able blink (you don't say).
 
 # Circuit
+See  [this diagram](#Simplified) for a simplified circuit. I also made a more professional one with EasyEDA which could be ordered there for a few bugs.
 
+## Easy-EDA
+Follow link to [OSHWLab](https://oshwlab.com/frostfreak/carlightcontrol):
+
+## Simplified
 Following diagram (nice paint skills, eh?) shows a simplified circuit how every bulb (in this case only one) is connected to the ESP32.
 
 * **12 V**: Power Source for dimming/switching/blinking lamps
@@ -22,7 +27,7 @@ Following diagram (nice paint skills, eh?) shows a simplified circuit how every 
 * **IRF9540N**: P-Channel Mosfet to control each bulb
 * **BC547**: NPN-Transistor to toggle IRF9540N
 * **250 Ohms potentiometer**: for measuring voltage input
-* **10K Ohms resistor**: On ESP32 for safeguarding and current limiting
+* **1K Ohms resistor**: On ESP32 for safeguarding and current limiting
 * **10K Ohms resistor**: Pull up resistor
 
 ![simplified circuit diagram](simplified_circuit.bmp)
