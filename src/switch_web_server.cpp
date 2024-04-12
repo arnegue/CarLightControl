@@ -6,12 +6,12 @@ const char index_html[] PROGMEM =
 #include "index.h" // unfortunatelly this only works when manipulating the html to a raw-string, and changing the file extension
     ;
 
-void SwitchWebServer::handle_default(AsyncWebServerRequest *request)
+void SwitchWebServer::handleDefault(AsyncWebServerRequest *request)
 {
-    request->send_P(200, "text/html", index_html, processor);
+    request->send_P(200, "text/html", index_html, mTemplateProcessor);
 }
 
-void SwitchWebServer::handle_update(AsyncWebServerRequest *request)
+void SwitchWebServer::handleUpdate(AsyncWebServerRequest *request)
 {
     String inputMessage1;
     String inputMessage2;
@@ -53,14 +53,14 @@ void SwitchWebServer::handle_update(AsyncWebServerRequest *request)
     request->send(200, "text/plain", "OK");
 }
 
-void SwitchWebServer::handle_not_found(AsyncWebServerRequest *request)
+void SwitchWebServer::handleNotFound(AsyncWebServerRequest *request)
 {
     String unkown_request = request->url();
     Serial.print("Unknown request: ");
     Serial.println(unkown_request);
 }
 
-void SwitchWebServer::handle_on_successful_upload(AsyncWebServerRequest *request)
+void SwitchWebServer::handleOnSuccessfulUpload(AsyncWebServerRequest *request)
 {
     AsyncWebServerResponse *response = request->beginResponse((Update.hasError()) ? 500 : 200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
     response->addHeader("Connection", "close");
@@ -70,14 +70,14 @@ void SwitchWebServer::handle_on_successful_upload(AsyncWebServerRequest *request
     ESP.restart();
 }
 
-void SwitchWebServer::handle_on_upload(AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final)
+void SwitchWebServer::handleOnUpload(AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final)
 {
     // Upload handler chunks in data
     if (!index)
     {
         Serial.println("Starting firmware update");
         // Switch off all lamps
-        for (auto pwm_switch : switches)
+        for (auto pwm_switch : mSwitches)
         {
             pwm_switch->setValue(0);
         }
@@ -117,7 +117,7 @@ void SwitchWebServer::handle_on_upload(AsyncWebServerRequest *request, const Str
 
 PWMSwitch *SwitchWebServer::getSwitchByName(const String &name)
 {
-    for (auto pwm_switch : switches)
+    for (auto pwm_switch : mSwitches)
     {
         if (pwm_switch->getName() == name)
         {
@@ -134,7 +134,7 @@ String SwitchWebServer::RequestProcessor(const String &var)
     if (var == "BUTTON_REPLACE")
     {
         Serial.println("BUTTON_REPLACE");
-        for (auto pwm_switch : switches)
+        for (auto pwm_switch : mSwitches)
         {
             Serial.println(pwm_switch->getName());
             ret_str += "<tr>";

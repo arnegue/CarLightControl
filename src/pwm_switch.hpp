@@ -19,9 +19,9 @@ public:
      * @param potentiometer_pin Pin of potentiometer
      */
     PWMSwitch(const String &pwm_name, uint8_t pwm_pin, uint8_t potentiometer_pin)
-        : m_name(pwm_name),
-          m_pwm_pin(pwm_pin),
-          m_potentiometer_pin(potentiometer_pin) {}
+        : mName(pwm_name),
+          mPWMPin(pwm_pin),
+          mPotentiometerPin(potentiometer_pin) {}
 
     /**
      * @brief Destroy the PWMSwitch object
@@ -48,7 +48,7 @@ public:
     const String &getName() const;
 
     /**
-     * @brief Enables PWM. When switching on, set m_duty_cycle to previous set value
+     * @brief Enables PWM. When switching on, set mDutyCycle to previous set value
      *
      * @param on Boolean to set on (true) or off (false)
      */
@@ -80,22 +80,22 @@ public:
     /**
      * @brief Measures potentiometer pin. If value changed over threshold (CHANGE_PERC), set value to pwm
      */
-    virtual void measure_potentiometer_set_value();
+    virtual void measurePotentiometerSetValue();
 
 private:
-    static uint8_t m_next_free_pwm_channel;            // Internal counter. For each switch a counter
-    const String m_name;                               // Name for logging
-    uint8_t m_duty_cycle = 0;                          // Currently set duty-cycle
-    const uint8_t m_pwm_pin;                           // PWM-Pin
-    const uint8_t m_pwm_channel = getNextPWMChannel(); // PWM channel used for PWM pin
+    static uint8_t mNextFreePWMChannel;              // Internal counter. For each switch a counter
+    const String mName;                              // Name for logging
+    uint8_t mDutyCycle = 0;                          // Currently set duty-cycle
+    const uint8_t mPWMPin;                           // PWM-Pin
+    const uint8_t mPWMChannel = getNextPWMChannel(); // PWM channel used for PWM pin
 
     // PWM-Constants
     static const uint16_t PWM_FREQ = 500;     // Frequency for pwm
     static const uint8_t RESOLUTION_BITS = 8; // Could get up to 16 bit, but we don't need it here
 protected:
-    bool m_output_enable = false;                  // output enable
-    const uint8_t m_potentiometer_pin;             // Analog pin for potentiometer
-    uint8_t m_last_measure_changed_value_perc = 0; // Last measured potentiometer value (to detect changes)
+    bool mOutputEnable = false;           // output enable
+    const uint8_t mPotentiometerPin;      // Analog pin for potentiometer
+    uint8_t mLastMeasuredChange_perc = 0; // Last measured potentiometer value (to detect changes)
 
     //  Analog-Constants
     static const uint16_t MAX_VALUE = (1 << RESOLUTION_BITS) - 1;

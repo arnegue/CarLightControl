@@ -29,22 +29,22 @@ public:
      * @param switches Vector of switches
      * @param port HTTP-Ports
      */
-    SwitchWebServer(const std::vector<PWMSwitch *> &switches, const uint16_t port) : switches(switches), server(make_unique<AsyncWebServer>(port))
+    SwitchWebServer(const std::vector<PWMSwitch *> &switches, const uint16_t port) : mSwitches(switches), mServer(make_unique<AsyncWebServer>(port))
     {
-        ArRequestHandlerFunction default_function = std::bind(&SwitchWebServer::handle_default, this, std::placeholders::_1);
-        server->on("/", HTTP_GET, default_function);
+        ArRequestHandlerFunction default_function = std::bind(&SwitchWebServer::handleDefault, this, std::placeholders::_1);
+        mServer->on("/", HTTP_GET, default_function);
 
-        ArRequestHandlerFunction update_function = std::bind(&SwitchWebServer::handle_update, this, std::placeholders::_1);
-        server->on("/update", update_function);
+        ArRequestHandlerFunction update_function = std::bind(&SwitchWebServer::handleUpdate, this, std::placeholders::_1);
+        mServer->on("/update", update_function);
 
-        ArRequestHandlerFunction on_successful_upload_function = std::bind(&SwitchWebServer::handle_on_successful_upload, this, std::placeholders::_1);
-        ArUploadHandlerFunction on_upload_function = std::bind(&SwitchWebServer::handle_on_upload, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
-        server->on("/upload", HTTP_POST, on_successful_upload_function, on_upload_function);
+        ArRequestHandlerFunction on_successful_upload_function = std::bind(&SwitchWebServer::handleOnSuccessfulUpload, this, std::placeholders::_1);
+        ArUploadHandlerFunction on_upload_function = std::bind(&SwitchWebServer::handleOnUpload, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+        mServer->on("/upload", HTTP_POST, on_successful_upload_function, on_upload_function);
 
-        ArRequestHandlerFunction on_not_found_function = std::bind(&SwitchWebServer::handle_not_found, this, std::placeholders::_1);
-        server->onNotFound(on_not_found_function);
+        ArRequestHandlerFunction on_not_found_function = std::bind(&SwitchWebServer::handleNotFound, this, std::placeholders::_1);
+        mServer->onNotFound(on_not_found_function);
 
-        processor = std::bind(&SwitchWebServer::RequestProcessor, this, std::placeholders::_1);
+        mTemplateProcessor = std::bind(&SwitchWebServer::RequestProcessor, this, std::placeholders::_1);
     }
 
     /**
@@ -52,7 +52,7 @@ public:
      */
     void begin()
     {
-        server->begin();
+        mServer->begin();
     }
 
 private:
@@ -61,28 +61,28 @@ private:
      *
      * @param request request object to handle
      */
-    void handle_default(AsyncWebServerRequest *request);
+    void handleDefault(AsyncWebServerRequest *request);
 
     /**
      * @brief Handles Update-calls (toggle switch; set value)
      *
      * @param request request object to handle
      */
-    void handle_update(AsyncWebServerRequest *request);
+    void handleUpdate(AsyncWebServerRequest *request);
 
     /**
      * @brief Handles unknown requests
      *
      * @param request request object to handle
      */
-    void handle_not_found(AsyncWebServerRequest *request);
+    void handleNotFound(AsyncWebServerRequest *request);
 
     /**
      * @brief Handles requests after firmware was successfully uploaded
      *
      * @param request request object to handle
      */
-    void handle_on_successful_upload(AsyncWebServerRequest *request);
+    void handleOnSuccessfulUpload(AsyncWebServerRequest *request);
 
     /**
      * @brief Handles upload-request function
@@ -93,7 +93,7 @@ private:
      * @param data pointer to data chunk
      * @param len length of chunk to write
      */
-    void handle_on_upload(AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final);
+    void handleOnUpload(AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final);
 
     /**
      * @brief Returns switch by name or raises Exception if not found
@@ -115,9 +115,9 @@ private:
     const String PARAM_STATE = "state"; // GET-Parameter "state"
     const String PARAM_VALUE = "value"; // GET-Parameter "value"
 
-    const std::vector<PWMSwitch *> &switches; // Vector of switches
-    std::unique_ptr<AsyncWebServer> server;   // WebServer for requests
-    AwsTemplateProcessor processor;           // Processor for Strings
+    const std::vector<PWMSwitch *> &mSwitches; // Vector of switches
+    std::unique_ptr<AsyncWebServer> mServer;   // WebServer for requests
+    AwsTemplateProcessor mTemplateProcessor;   // Processor for Strings
 };
 
 #endif // SWITCH_WEB_SERVER_H

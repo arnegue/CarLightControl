@@ -14,8 +14,8 @@ void BlinkingPWMSwitch::setup()
 
 bool BlinkingPWMSwitch::getOutput() const
 {
-    auto it = std::find(active_blinkers.begin(), active_blinkers.end(), this);
-    return it != active_blinkers.end(); // If blinker is in the list, it's enabled
+    auto it = std::find(activeBlinkers.begin(), activeBlinkers.end(), this);
+    return it != activeBlinkers.end(); // If blinker is in the list, it's enabled
 }
 
 void BlinkingPWMSwitch::setOutput(bool on)
@@ -24,21 +24,21 @@ void BlinkingPWMSwitch::setOutput(bool on)
     if (on)
     {
         // Activate timer when first blinker gets enabled
-        if (active_blinkers.empty())
+        if (activeBlinkers.empty())
         {
             timerAlarmEnable(BlinkTimerCfg);
         }
-        active_blinkers.insert(this);
+        activeBlinkers.insert(this);
     }
     else
     {
         // Remove from active blinkers if it's enabled
         if (getOutput())
         {
-            active_blinkers.erase(this);
+            activeBlinkers.erase(this);
         }
         // Disable timer when last blinker gets disabled
-        if (active_blinkers.empty())
+        if (activeBlinkers.empty())
         {
             timerAlarmDisable(BlinkTimerCfg);
         }
@@ -48,15 +48,15 @@ void BlinkingPWMSwitch::setOutput(bool on)
 void BlinkingPWMSwitch::toggle()
 {
     // Call base class to avoid toggling timer (don't use getOutput. That's more like "enabled")
-    PWMSwitch::setOutput(!m_output_enable);
+    PWMSwitch::setOutput(!mOutputEnable);
 }
 
 std::set<BlinkingPWMSwitch *> BlinkingPWMSwitch::getActiveBlinkers()
 {
-    return active_blinkers;
+    return activeBlinkers;
 }
 
-std::set<BlinkingPWMSwitch *> BlinkingPWMSwitch::active_blinkers = std::set<BlinkingPWMSwitch *>();
+std::set<BlinkingPWMSwitch *> BlinkingPWMSwitch::activeBlinkers = std::set<BlinkingPWMSwitch *>();
 hw_timer_t *BlinkingPWMSwitch::BlinkTimerCfg = nullptr;
 
 // Callbacks. Toggles all active blinkers

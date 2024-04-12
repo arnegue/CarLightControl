@@ -38,7 +38,7 @@ public:
     bool getOutput() const override;
 
     /**
-     * @brief  Enables blinker. If so, add it to active_blinkers-list so that timer may toggle it in callback
+     * @brief  Enables blinker. If so, add it to activeBlinkers-list so that timer may toggle it in callback
      * @param on Boolean to set on (true) or off (false)
      */
     void setOutput(bool on) override;
@@ -56,9 +56,9 @@ public:
     static std::set<BlinkingPWMSwitch *> getActiveBlinkers();
 
 protected:
-    static std::set<BlinkingPWMSwitch *> active_blinkers; // List of all active blinkers
-    static hw_timer_t *BlinkTimerCfg;                     // Timer need for blinking
-    const uint8_t TIMER_NUMBER = 0;                       // ID of timer
+    static std::set<BlinkingPWMSwitch *> activeBlinkers; // List of all active blinkers
+    static hw_timer_t *BlinkTimerCfg;                    // Timer need for blinking
+    const uint8_t TIMER_NUMBER = 0;                      // ID of timer
 
     // We need a 1Hz blink frequency. So we want the callback to be called every 1000ms: 1000 = TIMER_TICKS * (TIMER_PRESCALER / 80Mhz APB_CLK )
     const uint16_t TIMER_PRESCALER = 8000;

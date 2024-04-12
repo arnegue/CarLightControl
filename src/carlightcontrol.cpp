@@ -64,7 +64,7 @@ void loop()
 #ifdef ENABLE_POTENTIOMETER
     for (auto pwm_switch : switches)
     {
-        pwm_switch->measure_potentiometer_set_value();
+        pwm_switch->measurePotentiometerSetValue();
     }
 #endif
     delay(100);

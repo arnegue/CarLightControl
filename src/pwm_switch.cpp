@@ -1,39 +1,39 @@
 #include "pwm_switch.hpp"
 
-uint8_t PWMSwitch::m_next_free_pwm_channel = 0;
+uint8_t PWMSwitch::mNextFreePWMChannel = 0;
 
 uint8_t PWMSwitch::getNextPWMChannel()
 {
-    return m_next_free_pwm_channel++;
+    return mNextFreePWMChannel++;
 }
 
 void PWMSwitch::setup()
 {
-    ledcSetup(this->m_pwm_channel, PWMSwitch::PWM_FREQ, PWMSwitch::RESOLUTION_BITS);
-    ledcAttachPin(this->m_pwm_pin, m_pwm_channel);
+    ledcSetup(this->mPWMChannel, PWMSwitch::PWM_FREQ, PWMSwitch::RESOLUTION_BITS);
+    ledcAttachPin(this->mPWMPin, mPWMChannel);
 }
 
 const String &PWMSwitch::getName() const
 {
-    return this->m_name;
+    return this->mName;
 }
 
 void PWMSwitch::setOutput(bool on)
 {
-    if (on && this->m_duty_cycle != 0)
+    if (on && this->mDutyCycle != 0)
     {
-        ledcWrite(this->m_pwm_channel, this->m_duty_cycle);
+        ledcWrite(this->mPWMChannel, this->mDutyCycle);
     }
     else
     {
-        ledcWrite(this->m_pwm_channel, 0);
+        ledcWrite(this->mPWMChannel, 0);
     }
-    this->m_output_enable = on;
+    this->mOutputEnable = on;
 }
 
 bool PWMSwitch::getOutput() const
 {
-    return this->m_output_enable;
+    return this->mOutputEnable;
 }
 
 void PWMSwitch::setValue(uint8_t percentage)
@@ -42,41 +42,41 @@ void PWMSwitch::setValue(uint8_t percentage)
     {
         percentage = 100;
     }
-    this->m_duty_cycle = (PWMSwitch::MAX_VALUE * percentage) / 100;
-    if (this->m_duty_cycle == 0)
+    this->mDutyCycle = (PWMSwitch::MAX_VALUE * percentage) / 100;
+    if (this->mDutyCycle == 0)
     { // Turn off to avoid leak current
         this->setOutput(false);
     }
     else if (this->getOutput())
     {
-        ledcWrite(this->m_pwm_channel, this->m_duty_cycle);
+        ledcWrite(this->mPWMChannel, this->mDutyCycle);
     }
 }
 
 uint8_t PWMSwitch::getValue() const
 {
-    return (this->m_duty_cycle * 100) / PWMSwitch::MAX_VALUE;
+    return (this->mDutyCycle * 100) / PWMSwitch::MAX_VALUE;
 }
 
-void PWMSwitch::measure_potentiometer_set_value()
+void PWMSwitch::measurePotentiometerSetValue()
 {
-    uint16_t sensor_value = analogRead(this->m_potentiometer_pin);
+    uint16_t sensor_value = analogRead(this->mPotentiometerPin);
 
     uint8_t pwm_value = (100 * sensor_value) / PWMSwitch::MAX_ANALOG_IN;
 
     uint16_t diff = 0;
-    if (pwm_value > this->m_last_measure_changed_value_perc)
+    if (pwm_value > this->mLastMeasuredChange_perc)
     {
-        diff = pwm_value - this->m_last_measure_changed_value_perc;
+        diff = pwm_value - this->mLastMeasuredChange_perc;
     }
     else
     {
-        diff = this->m_last_measure_changed_value_perc - pwm_value;
+        diff = this->mLastMeasuredChange_perc - pwm_value;
     }
     if (diff > PWMSwitch::CHANGE_PERC)
     {
         this->setValue(pwm_value);
-        this->m_last_measure_changed_value_perc = pwm_value;
+        this->mLastMeasuredChange_perc = pwm_value;
         // If value is below CHANGE_PERC turn it off
         if (pwm_value < PWMSwitch::CHANGE_PERC)
         {
