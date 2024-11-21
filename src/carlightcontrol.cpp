@@ -33,13 +33,15 @@ void setup()
     // WiFi
     WiFi.begin(ssid, password);
     WiFiClass::setHostname("headlight1");
-    while (WiFiClass::status() != WL_CONNECTED)
+    auto wifiState = WiFiClass::status();
+    while (wifiState != WL_CONNECTED)
     {
+        Serial.printf("Connecting to WiFi. Current state: %d\n", wifiState);
         delay(1000);
-        Serial.println("Connecting to WiFi...");
+        wifiState = WiFiClass::status();
     }
-    Serial.print("Connected to WiFi: ");
-    Serial.println(ssid);
+    Serial.printf("Connected to WiFi \"%s\" with IP: ", ssid);
+    Serial.println(WiFi.localIP());
 
     // Switches
     for (auto pwm_switch : switches)
