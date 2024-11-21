@@ -60,10 +60,12 @@ uint8_t PWMSwitch::getValue() const
 
 void PWMSwitch::measurePotentiometerSetValue()
 {
+    // Read value (12 bit)
     uint16_t sensor_value = analogRead(this->mPotentiometerPin);
-
+    // Convert it into a percentage
     uint8_t pwm_value = (100 * sensor_value) / PWMSwitch::MAX_ANALOG_IN;
 
+    // Calculate difference
     uint16_t diff = 0;
     if (pwm_value > this->mLastMeasuredChange_perc)
     {
@@ -73,24 +75,17 @@ void PWMSwitch::measurePotentiometerSetValue()
     {
         diff = this->mLastMeasuredChange_perc - pwm_value;
     }
+
+    // If difference is above Threshold, apply it
     if (diff > PWMSwitch::CHANGE_PERC)
     {
         this->setValue(pwm_value);
         this->mLastMeasuredChange_perc = pwm_value;
-        // If value is below CHANGE_PERC turn it off
-        if (pwm_value < PWMSwitch::CHANGE_PERC)
+
+        // Switch off if below threshold, switch on if above
+        if ((pwm_value < PWMSwitch::CHANGE_PERC) == this->getOutput())
         {
-            if (this->getOutput() == true)
-            {
-                this->setOutput(false);
-            }
-        }
-        else
-        {
-            if (this->getOutput() == false)
-            {
-                this->setOutput(true);
-            }
+            this->setOutput(!this->getOutput());
         }
     }
 }
