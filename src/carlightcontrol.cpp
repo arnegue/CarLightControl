@@ -23,6 +23,23 @@ const static std::vector<PWMSwitch *> switches = {
 
 SwitchWebServer web_server(switches, 80);
 
+void CheckWiFiStatus(wl_status_t &previousState)
+{
+    auto wifiState = WiFiClass::status();
+    if (wifiState != WL_CONNECTED)
+    {
+        Serial.printf("Connecting to WiFi. Current state: %d\n", wifiState);
+    }
+    else if (wifiState == WL_CONNECTED && previousState != wifiState)
+    {
+        Serial.printf("Connected to WiFi \"%s\" with IP: ", ssid);
+        Serial.println(WiFi.localIP());
+        previousState = wifiState;
+    }
+}
+
+wl_status_t lastWiFiState = WL_DISCONNECTED;
+
 /**
  * @brief Setup routine. Setups Serial, WiFi, Switches and SwitchWebServer
  */
@@ -33,15 +50,7 @@ void setup()
     // WiFi
     WiFi.begin(ssid, password);
     WiFiClass::setHostname("headlight1");
-    auto wifiState = WiFiClass::status();
-    while (wifiState != WL_CONNECTED)
-    {
-        Serial.printf("Connecting to WiFi. Current state: %d\n", wifiState);
-        delay(1000);
-        wifiState = WiFiClass::status();
-    }
-    Serial.printf("Connected to WiFi \"%s\" with IP: ", ssid);
-    Serial.println(WiFi.localIP());
+    CheckWiFiStatus(lastWiFiState);
 
     // Switches
     for (auto pwm_switch : switches)
@@ -59,10 +68,11 @@ void setup()
 }
 
 /**
- * @brief  Loop which polls potentiometer values. If a value changed, override current one (else keep the one either set by previous pwm or from server)
+ * @brief  Loop which polls wifi state and potentiometer values. If a value changed, override current one (else keep the one either set by previous pwm or from server)
  */
 void loop()
 {
+    CheckWiFiStatus(lastWiFiState);
 #ifdef ENABLE_POTENTIOMETER
     for (auto pwm_switch : switches)
     {
