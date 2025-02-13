@@ -1,4 +1,5 @@
 #include "pwm_switch.hpp"
+#include <HardwareSerial.h>
 
 uint8_t PWMSwitch::mNextFreePWMChannel = 0;
 
