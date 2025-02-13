@@ -9,17 +9,17 @@
 // Create instances of Lights
 //                         Name             PWMPin, PotiPin
 PWMSwitch ruecklicht{     "Ruecklicht",     13,     35}; // PWM1
-PWMSwitch bremslicht{     "BremsLicht",     27,     34}; // PWM2
+PWMSwitch bremslicht{     "BremsLicht 1",   27,     34}; // PWM2
 BlinkingPWMSwitch blinker{"Blinker",        33,     39}; // PWM3
-PWMSwitch rueckfahrlicht{ "Rueckfahrlicht", 32,     36}; // PWM4
+PWMSwitch rueckfahrlicht{ "Bremslicht 2",   32,     36}; // PWM4
 // clang-format on
 
 // Add lights to vector
 const static std::vector<PWMSwitch *> switches = {
     &ruecklicht,
     &bremslicht,
-    &blinker,
-    &rueckfahrlicht};
+    &rueckfahrlicht,
+    &blinker};
 
 SwitchWebServer web_server(switches, 80);
 
